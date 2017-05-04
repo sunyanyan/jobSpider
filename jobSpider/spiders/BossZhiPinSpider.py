@@ -1,4 +1,5 @@
 import scrapy
+from jobSpider.items import JobDetailItem
 
 class BossZhiPinSpider(scrapy.Spider):
     name = "BossZhiPinSpider"
@@ -12,38 +13,72 @@ class BossZhiPinSpider(scrapy.Spider):
 
     # 爬虫的入口，可以在此进行一些初始化工作，比如从某个文件或者数据库读入起始url
     def start_requests(self):
+        print(" 开始解析url ----------------------------------------------------------------------------------------")
         for url in self.start_urls:
             # 此处将起始url加入scrapy的待爬取队列，并指定解析函数
             # scrapy会自行调度，并访问该url然后把内容拿回来
             yield scrapy.Request(url=url, callback=self.parse_page)
 
     # 版面解析函数，解析一个版面上的帖子的标题和地址
-    def parse_page(self,response):
+    def parse_page(self, response):
+        print("解析  parse_page ----------------------------------------------------------------------------------------")
         selector = scrapy.Selector(response)
         job_list = selector.xpath("//div[@class='job-list']/ul[1]/li/a")
         for job_list_content in job_list:
             url = self.host + job_list_content.xpath("@href").extract_first()
-            print("帖子 链接是:  "+url)
+            print("帖子 链接是:  "+url+"----------------------------------------------------------------------------------------")
             # 此处，将解析出的帖子地址加入待爬取队列，并指定解析函数
-            yield scrapy.Request(url=url,callback=self.parse)
+            yield scrapy.Request(url=url,callback=self.parse_job_detail)
         # 可以在此处解析翻页信息，从而实现爬取版区的多个页面
 
 
     #具体的招聘信息
-    def parse_topic(self,response):
+    def parse_job_detail(self, response):
         selector = scrapy.Selector(response)
 
-        #时间 工作类别 工资 年限 公司 地址
+        print(" 解析 job_detail  ----------------------------------------------------------------------------------------")
+        #时间 工作类别 工资 年限 公司 地址 工作要求
+        # 详情页
         job_primary = selector.xpath("//div[@class='job-primary']")
-        info_primary = job_primary.xpath("//div[@class='info-primary']")
-        time = info_primary.xpath("//div[@class='job-author']/span[@class='time']").extract_first()
+        info_primary = job_primary.xpath("./div[@class='info-primary']")
+        info_company = job_primary.xpath("./div[@class='info-company']")
 
-        info_primary_name = info_primary.xpath("//div[@class='name']")
-        job_type = info_primary_name.xpath("//text()").extract_first()
-        job_pay = info_primary_name.xpath("//span[@class='badge']").extract_first()
+        job_time = info_primary.xpath("./div[@class='job-author']/span/text()").extract_first()
+        job_type = info_primary.xpath("./div[@class='name']/text()").extract_first()
+        job_pay = info_primary.xpath("./div[@class='name']/span/text()").extract_first()
 
-        info_primary_p = info_primary.xpath("//p")
-        job_city = info_primary_p.xpath("//text()").extract_first()
+        job_city_age_edu = info_primary.xpath("./p/text()").extract()
+        job_city = job_city_age_edu[0]
+        job_age = job_city_age_edu[1]
+        job_edu = job_city_age_edu[2]
 
+        job_company_info = info_company.xpath("./p/text()").extract()
+        job_company_name = job_company_info[0]
+        job_company_type = job_company_info[1]
+        job_company_kind = job_company_info[2]
+        job_company_pn = job_company_info[3]
 
+        job_company_add = selector.xpath("//div[@class='location-address']/text()").extract_first()
+        job_company_long_lat = selector.xpath("//div[@id='map-container']").xpath('@data-long-lat').extract_first()
+
+        job_desc_list = selector.xpath("//div[@class='text']/text()").extract()
+        job_desc = ""
+        for job_desc_content in job_desc_list:
+            job_desc = job_desc +  job_desc_content
+
+        item = JobDetailItem()
+        item["job_time"] = job_time
+        item["job_type"] = job_type
+        item["job_pay"] = job_pay
+        item["job_city"] = job_city
+        item["job_age"] = job_age
+        item["job_edu"] = job_edu
+        item["job_company_name"] = job_company_name
+        item["job_company_type"] = job_company_type
+        item["job_company_kind"] = job_company_kind
+        item["job_company_pn"] = job_company_pn
+        item["job_company_add"] = job_company_add
+        item["job_company_long_lat"] = job_company_long_lat
+        item["job_desc"] = job_desc
+        yield item
 
