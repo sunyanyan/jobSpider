@@ -1,6 +1,7 @@
 import scrapy
 from jobSpider.items import JobDetailItem
 
+
 class BossZhiPinSpider(scrapy.Spider):
     name = "BossZhiPinSpider"
     host = "https://www.zhipin.com"
@@ -26,7 +27,7 @@ class BossZhiPinSpider(scrapy.Spider):
         job_list = selector.xpath("//div[@class='job-list']/ul[1]/li/a")
         for job_list_content in job_list:
             url = self.host + job_list_content.xpath("@href").extract_first()
-            print("帖子 链接是:  "+url+"----------------------------------------------------------------------------------------")
+            print("帖子 链接是:  "+url)
             # 此处，将解析出的帖子地址加入待爬取队列，并指定解析函数
             yield scrapy.Request(url=url,callback=self.parse_job_detail)
         # 可以在此处解析翻页信息，从而实现爬取版区的多个页面
@@ -36,7 +37,8 @@ class BossZhiPinSpider(scrapy.Spider):
     def parse_job_detail(self, response):
         selector = scrapy.Selector(response)
 
-        print(" 解析 job_detail  ----------------------------------------------------------------------------------------")
+        job_url = response.request.url
+        print(" 解析 job_detail  --------url:"+job_url)
         #时间 工作类别 工资 年限 公司 地址 工作要求
         # 详情页
         job_primary = selector.xpath("//div[@class='job-primary']")
@@ -48,23 +50,50 @@ class BossZhiPinSpider(scrapy.Spider):
         job_pay = info_primary.xpath("./div[@class='name']/span/text()").extract_first()
 
         job_city_age_edu = info_primary.xpath("./p/text()").extract()
-        job_city = job_city_age_edu[0]
-        job_age = job_city_age_edu[1]
-        job_edu = job_city_age_edu[2]
+        job_city_age_edu_str = ""
+        for job_city_age_edu_content in job_city_age_edu:
+            job_city_age_edu_str = job_city_age_edu_str +" "+ job_city_age_edu_content
+
+        job_city = ""
+        job_age = ""
+        job_edu = ""
+        job_city_age_edu_length = len(job_city_age_edu)
+        if job_city_age_edu_length >= 1:
+            job_city = job_city_age_edu[0]
+        if job_city_age_edu_length >= 2:
+            job_age = job_city_age_edu[1]
+        if job_city_age_edu_length >= 3:
+            job_edu = job_city_age_edu[2]
 
         job_company_info = info_company.xpath("./p/text()").extract()
-        job_company_name = job_company_info[0]
-        job_company_type = job_company_info[1]
-        job_company_kind = job_company_info[2]
-        job_company_pn = job_company_info[3]
+        job_company_info_str = ""
+        for job_company_info_content in job_company_info:
+            job_company_info_str = job_company_info_str +" "+ job_company_info_content
+
+        #公司规模可能为空
+        job_company_name = ""
+        job_company_type = ""
+        job_company_kind = ""
+        job_company_pn = ""
+        job_company_info_length = len(job_company_info)
+        if job_company_info_length >= 1:
+            job_company_name = job_company_info[0]
+        if job_company_info_length >= 2:
+            job_company_type = job_company_info[1]
+        if job_company_info_length >= 3:
+            job_company_kind = job_company_info[2]
+        if job_company_info_length >= 4:
+            job_company_kind = job_company_info[2]
+            job_company_pn = job_company_info[3]
+
 
         job_company_add = selector.xpath("//div[@class='location-address']/text()").extract_first()
         job_company_long_lat = selector.xpath("//div[@id='map-container']").xpath('@data-long-lat').extract_first()
-
         job_desc_list = selector.xpath("//div[@class='text']/text()").extract()
         job_desc = ""
         for job_desc_content in job_desc_list:
             job_desc = job_desc +  job_desc_content
+
 
         item = JobDetailItem()
         item["job_time"] = job_time
@@ -80,5 +109,8 @@ class BossZhiPinSpider(scrapy.Spider):
         item["job_company_add"] = job_company_add
         item["job_company_long_lat"] = job_company_long_lat
         item["job_desc"] = job_desc
+        item["job_company_info_str"] = job_company_info_str
+        item["job_city_age_edu_str"] = job_city_age_edu_str
+        item["job_url"] = job_url
         yield item
 

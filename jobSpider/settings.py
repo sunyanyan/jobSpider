@@ -14,6 +14,9 @@ BOT_NAME = 'jobSpider'
 SPIDER_MODULES = ['jobSpider.spiders']
 NEWSPIDER_MODULE = 'jobSpider.spiders'
 
+SQLITE_FILE_PATH = '../sqlite/Item.sqlite'
+SQLITE_ZHI_PIN_ITEM_TABLE = 'ZhiPinJobDetail'
+SQLITE_TEST_ZHI_PIN_ITEM_TABLE = 'TestZhiPin'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'jobSpider (+http://www.yourdomain.com)'
@@ -65,7 +68,7 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'jobSpider.pipelines.FilePipeline': 400,
+   'jobSpider.pipelines.Sqlite3Pipeline': 400,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

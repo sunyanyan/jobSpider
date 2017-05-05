@@ -27,3 +27,9 @@ class JobDetailItem(Item):
     job_company_add = Field()
     job_company_long_lat = Field()
     job_desc = Field()
+    job_company_info_str = Field()
+    job_city_age_edu_str = Field()
+    job_url = Field()
+
+class TestJobDetailItem(Item):
+    url = Field()
