@@ -23,6 +23,7 @@ class BossZhiPinSpider(scrapy.Spider):
     # 版面解析函数，解析一个版面上的帖子的标题和地址
     def parse_page(self, response):
         print("解析  parse_page ----------------------------------------------------------------------------------------")
+
         selector = scrapy.Selector(response)
         job_list = selector.xpath("//div[@class='job-list']/ul[1]/li/a")
         for job_list_content in job_list:

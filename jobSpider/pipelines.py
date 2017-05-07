@@ -44,7 +44,7 @@ class Sqlite3Pipeline(object):
     def process_item(self, item, spider):
         if isinstance(item, JobDetailItem):
             print(" sqlite3 处理 JobDetailItem ")
-            insert_sql = "insert into {0}({1}) values ({2})".format(self.sqlite_Test_ZhiPin_table,
+            insert_sql = "insert into {0}({1}) values ({2})".format(self.sqlite_ZhiPin_table,
                                                                 ', '.join(list(item.fields.keys())),
                                                                 ', '.join(['?'] * len(list(item.fields.keys()))))
             self.cur.execute(insert_sql, list(item.values()))
