@@ -64,3 +64,4 @@ class Sqlite3Pipeline(object):
         else:
             print(" item 类型不对 sqlite3不处理")
             return item
+
