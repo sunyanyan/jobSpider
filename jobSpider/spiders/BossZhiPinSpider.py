@@ -30,7 +30,7 @@ class BossZhiPinSpider(scrapy.Spider):
             url = self.host + job_list_content.xpath("@href").extract_first()
             print("帖子 链接是:  "+url)
             # 此处，将解析出的帖子地址加入待爬取队列，并指定解析函数
-            yield scrapy.Request(url=url,callback=self.parse_job_detail)
+            yield scrapy.Request(url=url, callback=self.parse_job_detail)
         # 可以在此处解析翻页信息，从而实现爬取版区的多个页面
 
 
