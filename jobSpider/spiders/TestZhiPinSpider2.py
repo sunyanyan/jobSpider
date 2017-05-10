@@ -1,6 +1,6 @@
 import scrapy
 from jobSpider.items import JobDetailItem
-import  sqlite3
+import sqlite3
 
 class TestZhiPinSpider2(scrapy.Spider):
     name = "TestZhiPinSpider2"
@@ -130,7 +130,7 @@ class TestZhiPinSpider2(scrapy.Spider):
         item["job_url"] = job_url
         yield item
 
-
+#判断具体招聘页面是否爬取过
 class JobDetailItemDB:
     sqlite_db_path = ''
     sqlite_ZhiPin_table = ''
