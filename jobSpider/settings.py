@@ -14,7 +14,8 @@ BOT_NAME = 'jobSpider'
 SPIDER_MODULES = ['jobSpider.spiders']
 NEWSPIDER_MODULE = 'jobSpider.spiders'
 
-SQLITE_FILE_PATH = '../sqlite/Item.sqlite'
+SQLITE_FILE_PATH = '/Users/sts/Desktop/github/pythonWorkSapce/jobSpider/jobSpider/sqlite/Item_use.sqlite'
+SQLITE_BASE_FILE_PATH = '/Users/sts/Desktop/github/pythonWorkSapce/jobSpider/jobSpider/sqlite/Item_base.sqlite'
 SQLITE_ZHI_PIN_ITEM_TABLE = 'ZhiPinJobDetail'
 SQLITE_TEST_ZHI_PIN_ITEM_TABLE = 'TestZhiPin'
 
