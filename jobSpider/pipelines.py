@@ -80,7 +80,7 @@ class Sqlite3Pipeline(object):
             return item
 
     def create_sql_db(self):
-
+        #复制原始数据库，（也可以直接新建一个，只不过懒得写SQL……
         sql_db_path = os.path.abspath(self.sqlite_file)
         sql_base_db_path = os.path.abspath(self.sqlite_base_file)
         print("\n create_sql_db  \n  ", sql_db_path, sql_base_db_path)

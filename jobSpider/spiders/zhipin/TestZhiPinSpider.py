@@ -197,8 +197,8 @@ class TestZhiPinSpider(scrapy.Spider):
         return scrapy.FormRequest.from_response(
             response,
             formdata={"regionCode": "+86",
-                      "account": "18868831855",
-                      "password": "wk657934388",
+                      "account": "手机号",
+                      "password": "密码",
                       "captcha": captcha_str,
                       "randomKey": randomKey},
             meta={'cookiejar': response.meta['cookiejar']},
