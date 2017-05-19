@@ -5,6 +5,7 @@ import os
 from urllib.request import urlretrieve
 
 class BossZhiPinSpider(scrapy.Spider):
+
     name = "BossZhiPinSpider"
     host = "https://www.zhipin.com"
     login_url = "https://www.zhipin.com/user/login.html?ka=header-login"
@@ -38,8 +39,8 @@ class BossZhiPinSpider(scrapy.Spider):
         return scrapy.FormRequest.from_response(
             response,
             formdata={"regionCode": "+86",
-                      "account": "18868831855",
-                      "password": "wk657934388",
+                      "account": "手机号",
+                      "password": "密码",
                       "captcha": captcha_str,
                       "randomKey": randomKey},
             meta={'cookiejar': response.meta['cookiejar']},
@@ -134,7 +135,7 @@ class BossZhiPinSpider(scrapy.Spider):
         for job_company_info_content in job_company_info:
             job_company_info_str = job_company_info_str +" "+ job_company_info_content
 
-        #公司规模可能为空
+        #公司融资情况可能为空
         job_company_name = ""
         job_company_type = ""
         job_company_kind = ""
@@ -145,7 +146,7 @@ class BossZhiPinSpider(scrapy.Spider):
         if job_company_info_length >= 2:
             job_company_type = job_company_info[1]
         if job_company_info_length >= 3:
-            job_company_kind = job_company_info[2]
+            job_company_pn = job_company_info[2]
         if job_company_info_length >= 4:
             job_company_kind = job_company_info[2]
             job_company_pn = job_company_info[3]
@@ -160,21 +161,21 @@ class BossZhiPinSpider(scrapy.Spider):
 
 
         item = JobDetailItem()
-        item["job_time"] = job_time
-        item["job_type"] = job_type
-        item["job_pay"] = job_pay
-        item["job_city"] = job_city
-        item["job_age"] = job_age
-        item["job_edu"] = job_edu
-        item["job_company_name"] = job_company_name
-        item["job_company_type"] = job_company_type
-        item["job_company_kind"] = job_company_kind
-        item["job_company_pn"] = job_company_pn
-        item["job_company_add"] = job_company_add
-        item["job_company_long_lat"] = job_company_long_lat
-        item["job_desc"] = job_desc
-        item["job_company_info_str"] = job_company_info_str
-        item["job_city_age_edu_str"] = job_city_age_edu_str
+        item["job_time"] = job_time #工作发布时间
+        item["job_type"] = job_type #招聘职业
+        item["job_pay"] = job_pay #薪资
+        item["job_city"] = job_city #招聘城市
+        item["job_age"] = job_age #工作经历要求
+        item["job_edu"] = job_edu #工作学历要求
+        item["job_company_name"] = job_company_name #公司名字
+        item["job_company_type"] = job_company_type #公司行业
+        item["job_company_kind"] = job_company_kind #融资规模
+        item["job_company_pn"] = job_company_pn #公司人数
+        item["job_company_add"] = job_company_add #公司地址
+        item["job_company_long_lat"] = job_company_long_lat #公司地址经纬度
+        item["job_desc"] = job_desc #招聘要求
+        item["job_company_info_str"] = job_company_info_str # job_company_name+job_company_type+job_company_kind+job_company_pn
+        item["job_city_age_edu_str"] = job_city_age_edu_str # job_city + job_age + job_edu
         item["job_url"] = job_url
         yield item
 
