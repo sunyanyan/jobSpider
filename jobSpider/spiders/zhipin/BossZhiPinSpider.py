@@ -28,6 +28,7 @@ class BossZhiPinSpider(scrapy.Spider):
         captcha_url = selector.xpath("//img[@class='verifyimg']").xpath("./@src").extract_first()
         randomKey = selector.xpath("//input[@class='randomkey']").xpath("./@value").extract_first()
 
+
         full_captcha_url = self.host + captcha_url
         fileName = self.captcha_file_path()
         urlretrieve(full_captcha_url, fileName)
@@ -36,11 +37,14 @@ class BossZhiPinSpider(scrapy.Spider):
         os.system(open_image_command)
 
         captcha_str = input("请输入验证码:")
+
+        print("captcha_str= ", captcha_str, " randomKey=", randomKey);
+        #FormRequest 会提交表单 模拟登录
         return scrapy.FormRequest.from_response(
             response,
             formdata={"regionCode": "+86",
-                      "account": "手机号",
-                      "password": "密码",
+                      "account": "你的账号",
+                      "password": "你的密码",
                       "captcha": captcha_str,
                       "randomKey": randomKey},
             meta={'cookiejar': response.meta['cookiejar']},
@@ -48,7 +52,7 @@ class BossZhiPinSpider(scrapy.Spider):
         )
 
     def after_login(self, response):
-        print("after_login")
+        print("登录后:")
         yield scrapy.Request(url=self.host,
                              meta={'cookiejar': response.meta['cookiejar']},
                              callback=self.open_host_page)
@@ -56,9 +60,9 @@ class BossZhiPinSpider(scrapy.Spider):
     def open_host_page(self, response):
         selector = scrapy.Selector(response)
         login_info = selector.xpath("//div[@class='user-nav']").extract_first()
-        print("\n 登录信息 \n", login_info)
+        print("\n 登录信息: \n", login_info)
 
-        print("\n 开始爬虫 \n")
+        print("\n 1.开始爬虫 \n")
 
         yield scrapy.Request(url=self.start_iOS_hangzhou_url,
                              meta={'cookiejar': response.meta['cookiejar']},
@@ -66,29 +70,30 @@ class BossZhiPinSpider(scrapy.Spider):
 
     # 版面解析函数，解析一个版面上的帖子的标题和地址
     def parse_page(self, response):
-        print("\n 开始 解析版面上的具体招聘帖子的链接\n")
+        print("\n 2. 解析版面上的具体招聘帖子的链接\n")
 
         selector = scrapy.Selector(response)
-        job_list = selector.xpath("//div[@class='job-list']/ul[1]/li/a")
+        job_list = selector.xpath("//div[@class='job-list']/ul[1]/li//div[@class='info-primary']//a")
+
         for job_list_content in job_list:
             url = self.host + job_list_content.xpath("@href").extract_first()
-            print("\n帖子 链接是:  "+url+"\n")
+            print("3. 帖子 链接是:  "+url+"\n")
             # 此处，将解析出的帖子地址加入待爬取队列，并指定解析函数
             yield scrapy.Request(url=url,
                                  meta={'cookiejar': response.meta['cookiejar']},
                                  callback=self.parse_job_detail)
 
         # 在此处解析翻页信息，从而实现爬取版区的多个页面
-        next_page_url = selector.xpath("//a[@ka='page-next']").xpath("@href").extract_first()
-        next_page_class = selector.xpath("//a[@ka='page-next']").xpath("@class").extract_first()
-        if next_page_class == "next":
-            next_page_full_url = self.host + next_page_url
-            print("\n 下一页链接为: "+next_page_full_url+"\n")
-            yield scrapy.Request(url=next_page_full_url,
-                                 meta={'cookiejar': response.meta['cookiejar']},
-                                 callback=self.parse_page)
-        else:
-            print("\n 没有下一页了\n")
+        # next_page_url = selector.xpath("//a[@ka='page-next']").xpath("@href").extract_first()
+        # next_page_class = selector.xpath("//a[@ka='page-next']").xpath("@class").extract_first()
+        # if next_page_class == "next":
+        #     next_page_full_url = self.host + next_page_url
+        #     print("4. 下一页链接为: "+next_page_full_url+"\n")
+        #     yield scrapy.Request(url=next_page_full_url,
+        #                          meta={'cookiejar': response.meta['cookiejar']},
+        #                          callback=self.parse_page)
+        # else:
+        #     print("\n --- 没有下一页了 --- \n")
 
 
 
@@ -97,7 +102,7 @@ class BossZhiPinSpider(scrapy.Spider):
         selector = scrapy.Selector(response)
 
         job_url = response.request.url
-        print("\n 当前帖子链接为  --------url:"+job_url+"\n")
+        print("5.  当前帖子链接为  --------url:"+job_url+"\n")
         if self.jobDetailItemDB.if_contain_url(job_url):
             print("\n  该链接重复 不解析这个item \n")
             return
@@ -136,20 +141,10 @@ class BossZhiPinSpider(scrapy.Spider):
             job_company_info_str = job_company_info_str +" "+ job_company_info_content
 
         #公司融资情况可能为空
-        job_company_name = ""
-        job_company_type = ""
-        job_company_kind = ""
-        job_company_pn = ""
-        job_company_info_length = len(job_company_info)
-        if job_company_info_length >= 1:
-            job_company_name = job_company_info[0]
-        if job_company_info_length >= 2:
-            job_company_type = job_company_info[1]
-        if job_company_info_length >= 3:
-            job_company_pn = job_company_info[2]
-        if job_company_info_length >= 4:
-            job_company_kind = job_company_info[2]
-            job_company_pn = job_company_info[3]
+        job_company_name = self.job_company_info_from_selector(selector, "job_company_name")
+        job_company_type = self.job_company_info_from_selector(selector, "job_company_type")
+        job_company_kind = self.job_company_info_from_selector(selector, "job_company_kind")
+        job_company_pn = self.job_company_info_from_selector(selector, "job_company_pn")
 
 
         job_company_add = selector.xpath("//div[@class='location-address']/text()").extract_first()
@@ -186,6 +181,34 @@ class BossZhiPinSpider(scrapy.Spider):
         if not os.path.exists(directory):
             os.makedirs(directory)
         return captcha_file_name
+
+    # 获取公司名字 公司人数 融资情况 公司行业
+    def job_company_info_from_selector(self, selector, str_type):
+
+        #公司名字 job_company_name
+        infoCompany = selector.xpath("//div[@class='info-company']")
+        if str_type == "job_company_name":
+            return selector.xpath("//div[@class='info-company']//h3/a/text()").extract_first()
+
+        #公司行业 job_company_type
+        if str_type == "job_company_type":
+            return selector.xpath("//div[@class='info-company']//p/a/text()").extract_first()
+
+        #融资规模 job_company_kind
+        if str_type == "job_company_kind":
+            job_company_kind_pn = selector.xpath("//div[@class='info-company']//p/text()").extract()
+            if len(job_company_kind_pn) >= 2:
+                return job_company_kind_pn[0]
+
+            return ""
+
+        # 公司人数 job_company_pn
+        if str_type == "job_company_pn":
+            job_company_kind_pn = selector.xpath("//div[@class='info-company']//p/text()").extract()
+            if len(job_company_kind_pn) >= 2:
+                return job_company_kind_pn[1]
+            else:
+                return job_company_kind_pn[0]
 
 #判断具体招聘页面是否爬取过
 class JobDetailItemDB:
